@@ -4229,6 +4229,10 @@ function sakurairo_refresh_stats_on_action() {
 add_action('wp_insert_post', 'sakurairo_refresh_stats_on_action');
 add_action('edit_post', 'sakurairo_refresh_stats_on_action');
 add_action('wp_insert_comment', 'sakurairo_refresh_stats_on_action');
+/* 友链变更时清理胶囊统计缓存 */
+add_action('added_link', 'sakurairo_refresh_stats_on_action');
+add_action('edit_link', 'sakurairo_refresh_stats_on_action');
+add_action('delete_link', 'sakurairo_refresh_stats_on_action');
 
 // 格式化时间差函数 - 将分钟转换为友好的文本格式
 function format_time_diff($minutes) {
