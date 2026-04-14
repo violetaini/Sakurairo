@@ -4221,14 +4221,35 @@ function sakurairo_record_admin_login() {
 add_action('wp_loaded', 'sakurairo_record_admin_login');
 
 // 添加钩子，在发布/更新文章或者评论时刷新缓存
-function sakurairo_refresh_stats_on_action() {
-    if (current_user_can('edit_post')) {
-        delete_transient('sakurairo_site_stats');
+function sakurairo_refresh_stats_on_action($post_id = 0, $post = null, $update = false) {
+    // 针对文章相关 hook，避免 autosave / revision / auto-draft 造成无意义刷新
+    if (!empty($post_id)) {
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        if (wp_is_post_revision($post_id)) {
+            return;
+        }
+
+        if (get_post_status($post_id) === 'auto-draft') {
+            return;
+        }
     }
+
+    delete_transient('sakurairo_site_stats');
 }
-add_action('wp_insert_post', 'sakurairo_refresh_stats_on_action');
-add_action('edit_post', 'sakurairo_refresh_stats_on_action');
+
+/* 文章变更时刷新胶囊统计缓存 */
+add_action('save_post', 'sakurairo_refresh_stats_on_action', 10, 3);
+add_action('deleted_post', 'sakurairo_refresh_stats_on_action');
+add_action('trash_post', 'sakurairo_refresh_stats_on_action');
+
+/* 评论变更时刷新胶囊统计缓存 */
 add_action('wp_insert_comment', 'sakurairo_refresh_stats_on_action');
+add_action('edit_comment', 'sakurairo_refresh_stats_on_action');
+add_action('deleted_comment', 'sakurairo_refresh_stats_on_action');
+
 /* 友链变更时清理胶囊统计缓存 */
 add_action('added_link', 'sakurairo_refresh_stats_on_action');
 add_action('edit_link', 'sakurairo_refresh_stats_on_action');
